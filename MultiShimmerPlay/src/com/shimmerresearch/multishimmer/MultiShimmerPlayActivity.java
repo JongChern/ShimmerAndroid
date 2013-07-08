@@ -180,8 +180,6 @@ public void onResume(){
   		mServiceBind = true;
   		mService.setHandler(mHandler);
   		//update the view
-  		
-  		
 		updateListView();
   		
   	}

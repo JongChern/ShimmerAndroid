@@ -68,7 +68,7 @@ public class MainCommandsActivity extends Activity{
 
 				  public void onItemClick(AdapterView<?> arg0, View arg1, int position, long arg3) {
 					  Log.d("Shimmer","Pos:" + Integer.toString(position));
-					  if (position==8){
+					  if (position==8 && !mCurrentDevice.equals("All Devices")){
 					  //call configure sound page
 						  Intent mainCommandIntent=new Intent(MainCommandsActivity.this,ShimmerSoundsMain.class);
 						  mainCommandIntent.putExtra("Position", mCurrentSlot);
