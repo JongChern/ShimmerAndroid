@@ -330,23 +330,14 @@ public class MultiShimmerPlayService extends Service {
 	                	 switch (msg.arg1) {
 	                     case Shimmer.STATE_CONNECTED:
 	                    	 Log.d("Shimmer",((ObjectCluster) msg.obj).mBluetoothAddress + "  " + ((ObjectCluster) msg.obj).mMyName);
-	                    	 
-	                    	 intent.putExtra("ShimmerBluetoothAddress", ((ObjectCluster) msg.obj).mBluetoothAddress );
-	                    	 intent.putExtra("ShimmerDeviceName", ((ObjectCluster) msg.obj).mMyName );
-	                    	 intent.putExtra("ShimmerState",Shimmer.STATE_CONNECTED);
-	                    	 sendBroadcast(intent);
-
+	                    	 mHandlerGraph.obtainMessage(Shimmer.MESSAGE_STATE_CHANGE, msg.arg1, -1, msg.obj).sendToTarget();
 	                         break;
 	                     case Shimmer.STATE_CONNECTING:
-	                    	 intent.putExtra("ShimmerBluetoothAddress", ((ObjectCluster) msg.obj).mBluetoothAddress );
-	                    	 intent.putExtra("ShimmerDeviceName", ((ObjectCluster) msg.obj).mMyName );
-	                    	 intent.putExtra("ShimmerState",Shimmer.STATE_CONNECTING);	                        
+	                    	 mHandlerGraph.obtainMessage(Shimmer.MESSAGE_STATE_CHANGE, msg.arg1, -1, msg.obj).sendToTarget();
 	                         break;
 	                     case Shimmer.STATE_NONE:
-	                    	 intent.putExtra("ShimmerBluetoothAddress", ((ObjectCluster) msg.obj).mBluetoothAddress );
-	                    	 intent.putExtra("ShimmerDeviceName", ((ObjectCluster) msg.obj).mMyName );
-	                    	 intent.putExtra("ShimmerState",Shimmer.STATE_NONE);
-	                    	 sendBroadcast(intent);
+	                    	 mMultiShimmer.remove(((ObjectCluster) msg.obj).mBluetoothAddress );
+	                    	 mHandlerGraph.obtainMessage(Shimmer.MESSAGE_STATE_CHANGE, msg.arg1, -1, msg.obj).sendToTarget();
 	                         break;
 	                     }
 	                	 
@@ -799,5 +790,10 @@ public class MultiShimmerPlayService extends Service {
 	public String returnSoundPath(int position, int sourcePosition){
 		return mSoundPathArray[position][sourcePosition];
 	}
+	
+	public void setHandler(Handler handler){
+		mHandlerGraph=handler;
+	}
+	
 	
 }

@@ -1,6 +1,7 @@
 package com.shimmerresearch.multishimmer;
 
 import java.io.File;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -39,6 +40,7 @@ import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -66,6 +68,7 @@ public class MultiShimmerPlayActivity extends Activity {
 	public static final int REQUEST_GRAPH_SHIMMER = 7;
 	public static final int REQUEST_CONFIGURE_GRAPH = 8;
 	private boolean mServiceFirstTime=true;
+	private static WeakReference<MultiShimmerPlayActivity> mWeakRef;
 	
 	
 	@Override
@@ -73,7 +76,7 @@ public class MultiShimmerPlayActivity extends Activity {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.main);
     Log.d("ShimmerH","Oncreate");
-   
+    mWeakRef = new WeakReference<MultiShimmerPlayActivity>(this);
     getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
     if (!isMyServiceRunning())
     {
@@ -93,7 +96,6 @@ public class MultiShimmerPlayActivity extends Activity {
     
     
     mCtx=this;
-    registerReceiver(myReceiver,new IntentFilter("com.shimmerresearch.service.MultiShimmerService"));
     final ListView listViewDevices = (ListView) findViewById(R.id.listView1);
 
     
@@ -155,8 +157,7 @@ public class MultiShimmerPlayActivity extends Activity {
   public void onPause(){
 	  super.onPause();
 	  
-	  unregisterReceiver(myReceiver);
-	  if(mServiceBind == true){
+	  	  if(mServiceBind == true){
 		  getApplicationContext().unbindService(mTestServiceConnection);
 	  }
 	 }
@@ -166,7 +167,6 @@ public void onResume(){
 
 	Intent intent=new Intent(MultiShimmerPlayActivity.this, MultiShimmerPlayService.class);
 	Log.d("ShimmerH","on Resume");
-	registerReceiver(myReceiver,new IntentFilter("com.shimmerresearch.service.MultiShimmerPlayService"));
 	getApplicationContext().bindService(intent,mTestServiceConnection, Context.BIND_AUTO_CREATE);
 }
   
@@ -178,6 +178,7 @@ public void onResume(){
   		LocalBinder binder = (LocalBinder) service;
   		mService = binder.getService();
   		mServiceBind = true;
+  		mService.setHandler(mHandler);
   		//update the view
   		
   		
@@ -225,24 +226,6 @@ public void onResume(){
     	}
     }
     
-    
-    private BroadcastReceiver myReceiver= new BroadcastReceiver(){
-
-		@Override
-		public void onReceive(Context arg0, Intent arg1) {
-			// TODO Auto-generated method stub
-			if(arg1.getIntExtra("ShimmerState", -1)!=-1){
-				
-				updateListView();
-			}
-			
-			
-			
-			
-		}
-    	
-    };
-    
     private boolean isMyServiceRunning() {
         ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
         for (RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
@@ -268,6 +251,64 @@ public void onResume(){
         }
         return ret;
     }
-    
+    private static Handler mHandler = new Handler() {
+
+		public void handleMessage(Message msg) {
+	        switch (msg.what) {
+	            case Shimmer.MESSAGE_STATE_CHANGE:
+	           	 switch (msg.arg1) {
+	           	 	case Shimmer.STATE_CONNECTED:
+		           	//check to see if there are other Shimmer Devices which need to be connected
+		           	//sendBroadcast(intent);
+		           	
+		                break;
+		            case Shimmer.STATE_CONNECTING:
+ 
+		                break;
+		            case Shimmer.STATE_NONE:
+		           	Log.d("Shimmer","NO_State" + ((ObjectCluster)msg.obj).mBluetoothAddress);
+		           	MultiShimmerPlayActivity activity = mWeakRef.get();
+		           	activity.updateListView();
+		           	/*for (ShimmerConfiguration sc:mShimmerConfigurationList){
+		           		if (sc.getBluetoothAddress().equals( ((ObjectCluster)msg.obj).mBluetoothAddress)){
+		           			position=pos+1;
+		           		}
+		           		pos++;
+		           	}
+		        	img = (ImageView) viewArray[position].findViewById(R.id.usericon);
+		        	img.setImageResource(R.drawable.locker_default);*/
+
+		           	//sendBroadcast(intent);
+		                break;
+		            case Shimmer.MSG_STATE_FULLY_INITIALIZED:
+		           	Log.d("ShimmerCA","Fully Initialized");
+		           	/*pos=0;
+		           	position=0;
+		           	for (ShimmerConfiguration sc:mShimmerConfigurationList){
+		           		if (sc.getBluetoothAddress().equals( ((ObjectCluster)msg.obj).mBluetoothAddress)){
+		           			position=pos+1;
+		           		}
+		           		pos++;
+		           	}
+		        	img = (ImageView) viewArray[position].findViewById(R.id.usericon);
+		        	img.setImageResource(R.drawable.locker_selected);*/
+
+		    		
+		        	
+		           		break;
+		            case Shimmer.MSG_STATE_STREAMING:
+			           	Log.d("ShimmerCA","Streaming");
+
+			    		break;
+		            case Shimmer.MSG_STATE_STOP_STREAMING:
+			           	Log.d("ShimmerCA","Streaming");
+
+			    		break;
+	            }
+	           	 break;
+
+            }    
+		}
+    };
   
   }
